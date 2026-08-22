@@ -62,7 +62,7 @@
                     </h1>
                     <p class="mt-4 text-lg text-slate-600 leading-relaxed">
                         Sampaikan laporan Anda terkait fasilitas publik, pelayanan masyarakat, 
-                        atau pelanggaran ASN. Identitas Anda dilindungi dengan aman dan rahasia.
+                        atau pelanggaran ASN secara langsung. Identitas Anda dilindungi dengan aman dan rahasia.
                     </p>
                 </div>
 
@@ -319,10 +319,7 @@
 
     <!-- Footer -->
     <footer class="bg-slate-900 text-slate-400 py-8 text-center text-sm mt-auto">
-        <p>&copy; 2026 LaporWarga - Layanan Pengaduan Masyarakat Terpadu.</p>
-        <p class="mt-1 flex justify-center items-center">
-            <i class="ph-fill ph-shield-warning mr-1"></i> Sistem Keamanan Enkripsi Berlapis
-        </p>
+        <p>&copy; 2026 Layanan Pengaduan Masyarakat Terpadu.</p>
     </footer>
 
     <!-- Modal Respon Admin (Pop-up) -->
@@ -450,6 +447,50 @@
             };
 
             // Sanitasi Dasar (Hapus tag HTML jika ada)
+            Object.keys(formData).forEach(key => {
+                if (typeof formData[key] === 'string') {
+                    formData[key] = formData[key].replace(/<[^>]*>?/gm, '');
+                }
+            });
+
+            // Set state menjadi 'Loading'
+            btnSubmit.classList.add('bg-slate-400', 'cursor-not-allowed');
+            btnSubmit.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+            btnSubmit.disabled = true;
+            btnIcon.classList.add('hidden');
+            btnSpinner.classList.remove('hidden');
+            btnText.innerText = 'Memproses...';
+            errorMsg.classList.add('hidden');
+
+            try {
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'add', data: formData })
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    // Berhasil
+                    form.classList.add('hidden');
+                    successView.classList.remove('hidden');
+                    document.getElementById('ticket-id-display').innerText = result.ticketId;
+                    loadPublicStats(); // Update otomatis angka statistik
+                } else {
+                    errorMsg.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error("Fetch Error:", error);
+                errorMsg.classList.remove('hidden');
+            } finally {
+                // Kembalikan state tombol
+                btnSubmit.classList.remove('bg-slate-400', 'cursor-not-allowed');
+                btnSubmit.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                btnSubmit.disabled = false;
+                btnIcon.classList.remove('hidden');
+                btnSpinner.classList.add('hidden');
+                btnText.innerText = 'Kirim Laporan';
             }
         }
 
