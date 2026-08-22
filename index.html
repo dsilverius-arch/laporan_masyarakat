@@ -17,7 +17,6 @@
     <style>
         body { font-family: 'Inter', sans-serif; }
         .hidden { display: none !important; }
-        /* Animasi loading sederhana */
         @keyframes spin { 100% { transform: rotate(360deg); } }
         .animate-spin { animation: spin 1s linear infinite; }
         .fade-in { animation: fadeIn 0.5s ease-in; }
@@ -63,7 +62,7 @@
                         <span class="text-blue-600">Pengaduan Online</span> Rakyat
                     </h1>
                     <p class="mt-4 text-lg text-slate-600 leading-relaxed">
-                        Sampaikan laporan Anda terkait fasilitas publik, pelayanan masyarakat, 
+                        Sampaikan laporan Anda terkait kedisiplinan, gratifikasi, fasilitas publik, 
                         atau pelanggaran secara aman dan rahasia. Identitas Anda dilindungi oleh sistem enkripsi.
                     </p>
                 </div>
@@ -73,9 +72,10 @@
                         <i class="ph-bold ph-magnifying-glass mr-2 text-blue-500 text-xl"></i> Cek Status Tiket
                     </h3>
                     <div class="flex space-x-2">
-                        <input type="text" placeholder="Masukkan ID Tiket (Contoh: TKT-12345)" class="flex-1 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" />
-                        <button class="bg-slate-900 text-white px-4 py-2 rounded-lg hover:bg-slate-800 transition font-medium">Lacak</button>
+                        <input id="track-ticket-input" type="text" placeholder="Masukkan ID Tiket (Contoh: TKT-12345)" class="flex-1 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" />
+                        <button onclick="lacakTiket()" class="bg-slate-900 text-white px-4 py-2 rounded-lg hover:bg-slate-800 transition font-medium">Lacak</button>
                     </div>
+                    <div id="track-result" class="mt-4 hidden p-4 bg-slate-50 rounded-xl text-sm border border-slate-200"></div>
                 </div>
 
                 <!-- Statistik Mock -->
@@ -134,12 +134,12 @@
 
                         <div class="space-y-1">
                             <label class="text-sm font-semibold text-slate-700">Kategori Laporan</label>
-                            <select id="input-kategori" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white">
-                                <option>--Pilih--</option>
-                                <option>Disiplin</option>
-                                <option>Gratifikasi</option>
-                                <option>Keamanan & Ketertiban</option>
-                                <option>Lainnya</option>
+                            <select id="input-kategori" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white" required>
+                                <option value="">-- Pilih Kategori --</option>
+                                <option value="Disiplin">Disiplin</option>
+                                <option value="Gratifikasi">Gratifikasi</option>
+                                <option value="Keamanan & Ketertiban">Keamanan & Ketertiban</option>
+                                <option value="Lainnya">Lainnya</option>
                             </select>
                         </div>
 
@@ -229,6 +229,12 @@
 
             <!-- TAB KONTEN: LAPORAN -->
             <div id="tab-content-laporan" class="space-y-6">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-bold text-slate-800">Daftar Laporan Masuk</h3>
+                    <button onclick="renderAdminTable()" class="text-sm bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition flex items-center">
+                        <i class="ph-bold ph-arrows-clockwise mr-1"></i> Refresh Data
+                    </button>
+                </div>
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-sm">
@@ -242,7 +248,7 @@
                                 </tr>
                             </thead>
                             <tbody id="table-body" class="divide-y divide-slate-100">
-                                <!-- Baris tabel akan dirender oleh JavaScript -->
+                                <tr><td colspan="5" class="px-6 py-4 text-center text-slate-500">Memuat data laporan...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -350,7 +356,7 @@
 
             <div class="bg-slate-50 px-6 py-4 border-t border-slate-200 flex justify-end space-x-3">
                 <button onclick="closeModal()" class="px-4 py-2 text-slate-600 font-medium hover:bg-slate-200 rounded-lg transition">Batal</button>
-                <button onclick="simpanUpdateAdmin()" class="px-6 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition flex items-center shadow-md">
+                <button onclick="simpanUpdateAdmin()" id="btn-save-update" class="px-6 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition flex items-center shadow-md">
                     <i class="ph-bold ph-check-circle mr-2 text-lg"></i> Simpan Update
                 </button>
             </div>
@@ -359,41 +365,24 @@
 
     <!-- Logika Aplikasi (JavaScript) -->
     <script>
-        /* 
-          ========================================================
-          KONFIGURASI API (UBAH BAGIAN INI)
-          ========================================================
-        */
         const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzcUKFKOXyY2KzNKcdOx6emt84L7tC5MLHnkjrHOG0eo4Zfdcft9cHAle5RZhM0KCg4Aw/exec';
 
-
-        // ==========================================
-        // MANAJEMEN TAMPILAN (VIEW)
-        // ==========================================
         function showView(viewId) {
-            // Sembunyikan semua view
             document.getElementById('public-view').classList.add('hidden');
             document.getElementById('admin-login-view').classList.add('hidden');
             document.getElementById('admin-dashboard-view').classList.add('hidden');
             
-            // Tampilkan view yang dipilih
             document.getElementById(viewId).classList.remove('hidden');
 
-            // Atur tombol navbar
             if(viewId === 'public-view') {
                 document.getElementById('btn-portal-admin').classList.remove('hidden');
                 document.getElementById('btn-logout-admin').classList.add('hidden');
             }
         }
 
-
-        // ==========================================
-        // FUNGSI PORTAL PUBLIK (KIRIM LAPORAN)
-        // ==========================================
         async function submitLaporan(e) {
-            e.preventDefault(); // Mencegah reload halaman
+            e.preventDefault();
             
-            // Ambil elemen UI
             const form = document.getElementById('pengaduan-form');
             const btnSubmit = document.getElementById('btn-submit');
             const btnIcon = document.getElementById('btn-icon');
@@ -402,7 +391,6 @@
             const errorMsg = document.getElementById('submit-error');
             const successView = document.getElementById('submit-success');
             
-            // Ambil nilai dari form
             const formData = {
                 nama: document.getElementById('input-nama').value,
                 nik: document.getElementById('input-nik').value,
@@ -411,12 +399,10 @@
                 laporan: document.getElementById('input-laporan').value
             };
 
-            // Sanitasi Dasar (Hapus tag HTML jika ada)
             Object.keys(formData).forEach(key => {
                 formData[key] = formData[key].replace(/<[^>]*>?/gm, '');
             });
 
-            // Set state menjadi 'Loading'
             btnSubmit.classList.add('bg-slate-400', 'cursor-not-allowed');
             btnSubmit.classList.remove('bg-blue-600', 'hover:bg-blue-700');
             btnSubmit.disabled = true;
@@ -428,27 +414,23 @@
             try {
                 const response = await fetch(GOOGLE_SCRIPT_URL, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // text/plain untuk bypass CORS
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify({ action: 'add', data: formData })
                 });
                 
                 const result = await response.json();
                 
                 if (result.status === 'success') {
-                    // Berhasil
                     form.classList.add('hidden');
                     successView.classList.remove('hidden');
                     document.getElementById('ticket-id-display').innerText = result.ticketId;
                 } else {
-                    // Gagal dari server
                     errorMsg.classList.remove('hidden');
                 }
             } catch (error) {
                 console.error("Fetch Error:", error);
-                // Gagal karena jaringan / URL salah
                 errorMsg.classList.remove('hidden');
             } finally {
-                // Kembalikan state tombol
                 btnSubmit.classList.remove('bg-slate-400', 'cursor-not-allowed');
                 btnSubmit.classList.add('bg-blue-600', 'hover:bg-blue-700');
                 btnSubmit.disabled = false;
@@ -464,10 +446,41 @@
             document.getElementById('submit-success').classList.add('hidden');
         }
 
+        async function lacakTiket() {
+            const ticketId = document.getElementById('track-ticket-input').value.trim();
+            const resultBox = document.getElementById('track-result');
+            if(!ticketId) {
+                alert('Masukkan ID Tiket terlebih dahulu.');
+                return;
+            }
+            resultBox.classList.remove('hidden');
+            resultBox.innerHTML = '<i class="ph-bold ph-spinner animate-spin"></i> Mencari tiket...';
 
-        // ==========================================
-        // FUNGSI ADMIN DASHBOARD & MANAJEMEN USER
-        // ==========================================
+            try {
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'getReport', data: { ticketId: ticketId } })
+                });
+                const result = await response.json();
+                if(result.status === 'success') {
+                    const d = result.data;
+                    resultBox.innerHTML = `
+                        <div class="font-bold text-slate-800 mb-1">Tiket: ${d.id}</div>
+                        <div class="text-xs text-slate-500 mb-2">Tanggal: ${d.tanggal}</div>
+                        <div class="mb-1"><span class="font-semibold">Status:</span> <span class="px-2 py-0.5 rounded text-xs font-bold bg-blue-100 text-blue-800">${d.status}</span></div>
+                        <div class="mb-1"><span class="font-semibold">Kategori:</span> ${d.kategori}</div>
+                        <div class="mb-1"><span class="font-semibold">Keluhan:</span> ${d.laporan}</div>
+                        <div class="mt-2 pt-2 border-t border-slate-200"><span class="font-semibold text-blue-700">Tanggapan Admin:</span> ${d.respon || 'Belum ada tanggapan'}</div>
+                    `;
+                } else {
+                    resultBox.innerHTML = '<span class="text-red-600">Tiket tidak ditemukan. Periksa kembali ID Tiket Anda.</span>';
+                }
+            } catch (err) {
+                resultBox.innerHTML = '<span class="text-red-600">Gagal melacak tiket. Periksa koneksi Anda.</span>';
+            }
+        }
+
         let currentUserData = null;
 
         async function loginAdmin(e) {
@@ -479,14 +492,12 @@
             const spinner = document.getElementById('login-spinner');
             const btnText = document.getElementById('login-text');
             
-            // UI State - Loading
             errorMsg.classList.add('hidden');
             btnLogin.disabled = true;
             spinner.classList.remove('hidden');
             btnText.innerText = 'Memverifikasi...';
 
             try {
-                // Melakukan pengecekan ke Google Sheets Database
                 const response = await fetch(GOOGLE_SCRIPT_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -499,32 +510,28 @@
                 const result = await response.json();
                 
                 if (result.status === 'success') {
-                    // Login Berhasil
                     currentUserData = result.user;
                     
-                    // Update tampilan profil di Dashboard
                     document.getElementById('current-user-display').innerText = currentUserData.username;
                     document.getElementById('current-role-display').innerText = currentUserData.role;
                     document.getElementById('current-role-display').classList.remove('hidden');
                     
-                    // Role-Based Access: Buka Tab Manajemen User JIKA dia Super Admin
                     if(currentUserData.role === 'Super Admin') {
                         document.getElementById('tab-btn-users').classList.remove('hidden');
-                        loadUsers(); // Tarik data user secara otomatis
+                        loadUsers();
                     } else {
                         document.getElementById('tab-btn-users').classList.add('hidden');
                     }
                     
-                    // Bersihkan form & ganti Tampilan
                     document.getElementById('admin-username').value = '';
                     document.getElementById('admin-password').value = '';
                     showView('admin-dashboard-view');
-                    switchAdminTab('laporan'); // Set default buka tab laporan
+                    switchAdminTab('laporan');
                     
                     document.getElementById('btn-portal-admin').classList.add('hidden');
                     document.getElementById('btn-logout-admin').classList.remove('hidden');
                     
-                    renderAdminTable(); // Render laporan
+                    renderAdminTable();
                 } else {
                     errorMsg.innerText = result.message || 'Username atau Password salah.';
                     errorMsg.classList.remove('hidden');
@@ -533,7 +540,6 @@
                 errorMsg.innerText = 'Gagal terhubung ke database. Periksa koneksi/URL Anda.';
                 errorMsg.classList.remove('hidden');
             } finally {
-                // Kembalikan tombol seperti semula
                 btnLogin.disabled = false;
                 spinner.classList.add('hidden');
                 btnText.innerText = 'Masuk ke Dashboard';
@@ -545,7 +551,6 @@
             showView('public-view');
         }
 
-        // Fungsi Perpindahan Tab (Laporan vs User)
         function switchAdminTab(tabName) {
             const tabLaporanBtn = document.getElementById('tab-btn-laporan');
             const tabUsersBtn = document.getElementById('tab-btn-users');
@@ -571,7 +576,6 @@
             }
         }
 
-        // Fungsi Load Daftar User dari Database
         async function loadUsers() {
             const tbody = document.getElementById('users-table-body');
             tbody.innerHTML = '<tr><td colspan="2" class="px-6 py-4 text-center text-slate-500"><i class="ph-bold ph-spinner animate-spin inline-block mr-2"></i> Memuat data...</td></tr>';
@@ -603,7 +607,6 @@
             }
         }
 
-        // Fungsi Simpan User ke Database
         async function tambahUser(e) {
             e.preventDefault();
             const usr = document.getElementById('new-username').value;
@@ -636,7 +639,7 @@
                     msg.className = 'text-sm font-medium text-green-600 block mt-3';
                     document.getElementById('new-username').value = '';
                     document.getElementById('new-password').value = '';
-                    loadUsers(); // Refresh tabel setelah ditambah
+                    loadUsers();
                 } else {
                     msg.innerText = result.message || 'Gagal menambahkan user.';
                     msg.className = 'text-sm font-medium text-red-600 block mt-3';
@@ -651,15 +654,9 @@
             }
         }
 
-        // Mockup Data Internal untuk Dashboard Admin
-        let dataLaporan = [
-            { id: 'TKT-91823', tanggal: '22 Aug 2026', nama: 'Budi Santoso', kategori: 'Infrastruktur', isi: 'Jalan berlubang parah di Jl. Merdeka.', status: 'Menunggu', respon: '' },
-            { id: 'TKT-10294', tanggal: '21 Aug 2026', nama: 'Siti Aminah', kategori: 'Pelayanan Publik', isi: 'Blangko KTP kosong sudah 2 bulan.', status: 'Diproses', respon: 'Sedang berkoordinasi.' },
-            { id: 'TKT-44912', tanggal: '20 Aug 2026', nama: 'Anonim', kategori: 'Lingkungan', isi: 'Tumpukan sampah liar di pasar.', status: 'Selesai', respon: 'Telah dibersihkan pagi ini.' }
-        ];
+        let dataLaporan = [];
         let currentSelectedId = null;
 
-        // Fungsi Warna Status
         function getStatusColor(status) {
             if(status === 'Menunggu') return 'bg-yellow-100 text-yellow-800 border-yellow-200';
             if(status === 'Diproses') return 'bg-blue-100 text-blue-800 border-blue-200';
@@ -667,34 +664,57 @@
             return 'bg-slate-100 text-slate-800';
         }
 
-        function renderAdminTable() {
+        async function renderAdminTable() {
             const tbody = document.getElementById('table-body');
-            tbody.innerHTML = ''; // Kosongkan tabel
+            tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-4 text-center text-slate-500"><i class="ph-bold ph-spinner animate-spin inline-block mr-2"></i> Memuat data dari Google Sheets...</td></tr>';
             
-            dataLaporan.forEach(item => {
-                const tr = document.createElement('tr');
-                tr.className = 'hover:bg-slate-50 transition';
-                tr.innerHTML = `
-                    <td class="px-6 py-4">
-                        <div class="font-bold text-slate-800">${item.id}</div>
-                        <div class="text-xs text-slate-500">${item.tanggal}</div>
-                    </td>
-                    <td class="px-6 py-4 font-medium">${item.nama}</td>
-                    <td class="px-6 py-4">
-                        <div class="inline-block px-2 py-1 bg-slate-100 rounded text-xs font-semibold mb-1 text-slate-600">${item.kategori}</div>
-                        <div class="text-slate-700 line-clamp-2">${item.isi}</div>
-                    </td>
-                    <td class="px-6 py-4">
-                        <span class="px-3 py-1 rounded-full text-xs font-bold border ${getStatusColor(item.status)}">${item.status}</span>
-                    </td>
-                    <td class="px-6 py-4 text-right">
-                        <button onclick="openModal('${item.id}')" class="text-blue-600 hover:text-blue-800 font-medium flex items-center justify-end w-full">
-                            <i class="ph-bold ph-chat-teardrop-text mr-1 text-lg"></i> Respon
-                        </button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
+            try {
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'getReports' })
+                });
+                const result = await response.json();
+
+                if(result.status === 'success') {
+                    dataLaporan = result.data;
+                    tbody.innerHTML = '';
+                    
+                    if(dataLaporan.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-4 text-center text-slate-500">Belum ada laporan masuk.</td></tr>';
+                        return;
+                    }
+
+                    dataLaporan.forEach(item => {
+                        const tr = document.createElement('tr');
+                        tr.className = 'hover:bg-slate-50 transition';
+                        tr.innerHTML = `
+                            <td class="px-6 py-4">
+                                <div class="font-bold text-slate-800">${item.id}</div>
+                                <div class="text-xs text-slate-500">${item.tanggal}</div>
+                            </td>
+                            <td class="px-6 py-4 font-medium">${item.nama}</td>
+                            <td class="px-6 py-4">
+                                <div class="inline-block px-2 py-1 bg-slate-100 rounded text-xs font-semibold mb-1 text-slate-600">${item.kategori}</div>
+                                <div class="text-slate-700 line-clamp-2">${item.laporan}</div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="px-3 py-1 rounded-full text-xs font-bold border ${getStatusColor(item.status)}">${item.status}</span>
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <button onclick="openModal('${item.id}')" class="text-blue-600 hover:text-blue-800 font-medium flex items-center justify-end w-full">
+                                    <i class="ph-bold ph-chat-teardrop-text mr-1 text-lg"></i> Respon
+                                </button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-4 text-center text-red-500">Gagal memuat laporan dari server.</td></tr>';
+                }
+            } catch (err) {
+                tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-4 text-center text-red-500">Kesalahan koneksi saat mengambil laporan.</td></tr>';
+            }
         }
 
         function openModal(id) {
@@ -703,9 +723,9 @@
                 currentSelectedId = id;
                 document.getElementById('modal-title').innerText = `${item.id} • ${item.nama}`;
                 document.getElementById('modal-kategori').innerText = item.kategori;
-                document.getElementById('modal-isi').innerText = item.isi;
+                document.getElementById('modal-isi').innerText = item.laporan;
                 document.getElementById('modal-status').value = item.status;
-                document.getElementById('modal-respon').value = item.respon;
+                document.getElementById('modal-respon').value = item.respon || '';
                 document.getElementById('admin-modal').classList.remove('hidden');
             }
         }
@@ -715,16 +735,36 @@
             currentSelectedId = null;
         }
 
-        function simpanUpdateAdmin() {
+        async function simpanUpdateAdmin() {
             if(currentSelectedId) {
-                const index = dataLaporan.findIndex(d => d.id === currentSelectedId);
-                if(index !== -1) {
-                    dataLaporan[index].status = document.getElementById('modal-status').value;
-                    dataLaporan[index].respon = document.getElementById('modal-respon').value;
-                    renderAdminTable(); // Update tampilan tabel
-                    closeModal(); // Tutup modal
-                    
-                    // Catatan: Pada aplikasi riil, disini tempat melakukan Fetch (Update) ke Google Scripts API.
+                const newStatus = document.getElementById('modal-status').value;
+                const newRespon = document.getElementById('modal-respon').value;
+                const btnSave = document.getElementById('btn-save-update');
+
+                btnSave.disabled = true;
+                btnSave.innerText = 'Menyimpan...';
+
+                try {
+                    const response = await fetch(GOOGLE_SCRIPT_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify({ 
+                            action: 'updateReport', 
+                            data: { ticketId: currentSelectedId, status: newStatus, respon: newRespon } 
+                        })
+                    });
+                    const result = await response.json();
+                    if(result.status === 'success') {
+                        renderAdminTable();
+                        closeModal();
+                    } else {
+                        alert('Gagal menyimpan update ke database.');
+                    }
+                } catch (err) {
+                    alert('Terjadi kesalahan koneksi.');
+                } finally {
+                    btnSave.disabled = false;
+                    btnSave.innerHTML = '<i class="ph-bold ph-check-circle mr-2 text-lg"></i> Simpan Update';
                 }
             }
         }
