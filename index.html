@@ -78,18 +78,18 @@
                     <div id="track-result" class="mt-4 hidden p-4 bg-slate-50 rounded-xl text-sm border border-slate-200"></div>
                 </div>
 
-                <!-- Statistik Mock -->
+                <!-- Statistik Real-time dari Database -->
                 <div class="grid grid-cols-3 gap-4">
                     <div class="bg-blue-50 p-4 rounded-xl text-center">
-                        <div class="text-2xl font-bold text-blue-700">1,204</div>
+                        <div id="stat-total" class="text-2xl font-bold text-blue-700">0</div>
                         <div class="text-xs text-blue-600 font-medium">Total Laporan</div>
                     </div>
                     <div class="bg-yellow-50 p-4 rounded-xl text-center">
-                        <div class="text-2xl font-bold text-yellow-600">142</div>
+                        <div id="stat-diproses" class="text-2xl font-bold text-yellow-600">0</div>
                         <div class="text-xs text-yellow-700 font-medium">Diproses</div>
                     </div>
                     <div class="bg-green-50 p-4 rounded-xl text-center">
-                        <div class="text-2xl font-bold text-green-600">985</div>
+                        <div id="stat-selesai" class="text-2xl font-bold text-green-600">0</div>
                         <div class="text-xs text-green-700 font-medium">Selesai</div>
                     </div>
                 </div>
@@ -480,6 +480,30 @@
                 resultBox.innerHTML = '<span class="text-red-600">Gagal melacak tiket. Periksa koneksi Anda.</span>';
             }
         }
+
+        // Fungsi untuk memuat statistik real-time dari database
+        async function loadPublicStats() {
+            try {
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'getStats' })
+                });
+                const result = await response.json();
+                if(result.status === 'success') {
+                    document.getElementById('stat-total').innerText = result.data.total;
+                    document.getElementById('stat-diproses').innerText = result.data.diproses;
+                    document.getElementById('stat-selesai').innerText = result.data.selesai;
+                }
+            } catch (err) {
+                console.error("Gagal memuat statistik:", err);
+            }
+        }
+
+        // Panggil fungsi statistik secara otomatis saat halaman dimuat
+        window.onload = function() {
+            loadPublicStats();
+        };
 
         let currentUserData = null;
 
