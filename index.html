@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LaporWarga - Layanan Aduan Masyarakat</title>
+    
+    <!-- Tailwind CSS untuk Styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Phosphor Icons untuk Ikon Resolusi Tinggi -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <!-- Font Inter dari Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .hidden { display: none !important; }
+        /* Animasi loading sederhana */
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .animate-spin { animation: spin 1s linear infinite; }
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 flex flex-col min-h-screen">
+
+    <!-- Navigation Bar -->
+    <nav class="bg-blue-700 text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center cursor-pointer space-x-2" onclick="showView('public-view')">
+                    <i class="ph-fill ph-shield-warning text-3xl text-yellow-400"></i>
+                    <span class="font-bold text-xl tracking-tight">LaporWarga</span>
+                </div>
+                <div>
+                    <!-- Tombol Login Admin -->
+                    <button id="btn-portal-admin" onclick="showView('admin-login-view')" class="text-sm font-medium bg-blue-800 px-4 py-2 rounded-lg hover:bg-blue-900 transition flex items-center shadow-sm">
+                        <i class="ph-bold ph-lock-key mr-2"></i> Portal Admin
+                    </button>
+                    <!-- Tombol Logout Admin (Disembunyikan default) -->
+                    <button id="btn-logout-admin" onclick="logoutAdmin()" class="hidden text-sm font-medium hover:text-yellow-200 transition flex items-center">
+                        <i class="ph-bold ph-sign-out mr-1"></i> Logout Admin
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full">
+        
+        <!-- ========================================== -->
+        <!-- PORTAL PUBLIK (Formulir Pengaduan)         -->
+        <!-- ========================================== -->
+        <div id="public-view" class="fade-in grid grid-cols-1 md:grid-cols-2 gap-12">
+            <!-- Left Column: Info & Tracker -->
+            <div class="space-y-8">
+                <div>
+                    <h1 class="text-4xl font-extrabold text-slate-900 leading-tight">
+                        Layanan Aspirasi & <br/>
+                        <span class="text-blue-600">Pengaduan Online</span> Rakyat
+                    </h1>
+                    <p class="mt-4 text-lg text-slate-600 leading-relaxed">
+                        Sampaikan laporan Anda terkait fasilitas publik, pelayanan masyarakat, 
+                        atau pelanggaran secara aman dan rahasia. Identitas Anda dilindungi oleh sistem enkripsi.
+                    </p>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                    <h3 class="text-lg font-bold flex items-center mb-4 text-slate-800">
+                        <i class="ph-bold ph-magnifying-glass mr-2 text-blue-500 text-xl"></i> Cek Status Tiket
+                    </h3>
+                    <div class="flex space-x-2">
+                        <input type="text" placeholder="Masukkan ID Tiket (Contoh: TKT-12345)" class="flex-1 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" />
+                        <button class="bg-slate-900 text-white px-4 py-2 rounded-lg hover:bg-slate-800 transition font-medium">Lacak</button>
+                    </div>
+                </div>
+
+                <!-- Statistik Mock -->
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="bg-blue-50 p-4 rounded-xl text-center">
+                        <div class="text-2xl font-bold text-blue-700">1,204</div>
+                        <div class="text-xs text-blue-600 font-medium">Total Laporan</div>
+                    </div>
+                    <div class="bg-yellow-50 p-4 rounded-xl text-center">
+                        <div class="text-2xl font-bold text-yellow-600">142</div>
+                        <div class="text-xs text-yellow-700 font-medium">Diproses</div>
+                    </div>
+                    <div class="bg-green-50 p-4 rounded-xl text-center">
+                        <div class="text-2xl font-bold text-green-600">985</div>
+                        <div class="text-xs text-green-700 font-medium">Selesai</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Submission Form -->
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100">
+                <div class="bg-blue-700 p-6 text-white">
+                    <h2 class="text-xl font-bold flex items-center">
+                        <i class="ph-bold ph-file-text mr-2 text-2xl"></i> Formulir Pengaduan
+                    </h2>
+                    <p class="text-blue-100 text-sm mt-1">Harap isi data dengan valid dan lengkap.</p>
+                </div>
+                
+                <div class="p-6">
+                    <!-- Status Success (Hidden default) -->
+                    <div id="submit-success" class="hidden bg-green-50 text-green-800 p-6 rounded-xl border border-green-200 text-center space-y-4">
+                        <i class="ph-fill ph-check-circle text-6xl text-green-500 mx-auto"></i>
+                        <h3 class="text-xl font-bold">Laporan Berhasil Terkirim!</h3>
+                        <p>Terima kasih atas partisipasi Anda. ID Tiket Anda adalah:</p>
+                        <div id="ticket-id-display" class="text-2xl font-mono font-bold bg-white p-3 rounded-lg border border-green-200 inline-block">
+                            TKT-XXXXX
+                        </div>
+                        <p class="text-sm text-green-700">Simpan ID ini untuk melacak status laporan Anda.</p>
+                        <button onclick="resetForm()" class="mt-4 bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition">
+                            Buat Laporan Baru
+                        </button>
+                    </div>
+
+                    <!-- Form Utama -->
+                    <form id="pengaduan-form" onsubmit="submitLaporan(event)" class="space-y-5">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div class="space-y-1">
+                                <label class="text-sm font-semibold text-slate-700">Nama Lengkap</label>
+                                <input id="input-nama" required class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Nama Anda" />
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-sm font-semibold text-slate-700">NIK (Dirahasiakan)</label>
+                                <input id="input-nik" type="number" required class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="16 Digit NIK" />
+                            </div>
+                        </div>
+
+                        <div class="space-y-1">
+                            <label class="text-sm font-semibold text-slate-700">Kategori Laporan</label>
+                            <select id="input-kategori" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+                                <option>Infrastruktur (Jalan Raya, Jembatan)</option>
+                                <option>Pelayanan Publik (KTP, Perizinan)</option>
+                                <option>Lingkungan (Sampah, Polusi)</option>
+                                <option>Keamanan & Ketertiban</option>
+                                <option>Lainnya</option>
+                            </select>
+                        </div>
+
+                        <div class="space-y-1">
+                            <label class="text-sm font-semibold text-slate-700">Lokasi Kejadian</label>
+                            <input id="input-lokasi" required class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Nama jalan, desa, atau kecamatan" />
+                        </div>
+
+                        <div class="space-y-1">
+                            <label class="text-sm font-semibold text-slate-700">Detail Laporan</label>
+                            <textarea id="input-laporan" required rows="4" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none" placeholder="Jelaskan secara detail kejadian atau keluhan Anda..."></textarea>
+                        </div>
+
+                        <!-- Error Banner (Hidden default) -->
+                        <div id="submit-error" class="hidden p-3 bg-red-50 text-red-700 rounded-lg flex items-center text-sm border border-red-200">
+                            <i class="ph-bold ph-warning-circle mr-2 text-lg"></i>
+                            Gagal mengirim laporan. Silakan periksa koneksi atau URL Script Anda.
+                        </div>
+
+                        <button type="submit" id="btn-submit" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg flex justify-center items-center hover:bg-blue-700 transition">
+                            <i id="btn-icon" class="ph-bold ph-paper-plane-right mr-2 text-xl"></i>
+                            <i id="btn-spinner" class="ph-bold ph-spinner animate-spin mr-2 text-xl hidden"></i>
+                            <span id="btn-text">Kirim Laporan</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- PORTAL ADMIN LOGIN                         -->
+        <!-- ========================================== -->
+        <div id="admin-login-view" class="hidden fade-in max-w-md mx-auto mt-12 bg-white p-8 rounded-2xl shadow-lg border border-slate-100">
+            <div class="text-center mb-8">
+                <div class="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="ph-fill ph-shield-warning text-3xl text-blue-700"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-800">Login Responden</h2>
+                <p class="text-slate-500 text-sm mt-1">Area terbatas khusus petugas administrasi.</p>
+            </div>
+
+            <form onsubmit="loginAdmin(event)" class="space-y-5">
+                <div class="space-y-1">
+                    <label class="text-sm font-semibold text-slate-700">Username</label>
+                    <div class="relative">
+                        <i class="ph-bold ph-user absolute left-3 top-3.5 text-slate-400 text-lg"></i>
+                        <input id="admin-username" type="text" required class="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Masukkan username" />
+                    </div>
+                </div>
+                <div class="space-y-1">
+                    <label class="text-sm font-semibold text-slate-700">Password</label>
+                    <div class="relative">
+                        <i class="ph-bold ph-lock-key absolute left-3 top-3.5 text-slate-400 text-lg"></i>
+                        <input id="admin-password" type="password" required class="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Masukkan password" />
+                    </div>
+                </div>
+                
+                <p id="login-error-msg" class="hidden text-red-500 text-sm font-medium">Username atau Password salah.</p>
+
+                <button type="submit" id="btn-login" class="w-full bg-slate-900 text-white font-bold py-3 px-4 rounded-lg hover:bg-slate-800 transition shadow-md flex justify-center items-center">
+                    <i id="login-spinner" class="ph-bold ph-spinner animate-spin mr-2 text-xl hidden"></i>
+                    <span id="login-text">Masuk ke Dashboard</span>
+                </button>
+            </form>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- PORTAL ADMIN DASHBOARD                     -->
+        <!-- ========================================== -->
+        <div id="admin-dashboard-view" class="hidden fade-in space-y-6">
+            <div class="flex justify-between items-end border-b border-slate-200 pb-4">
+                <div>
+                    <h1 class="text-2xl font-bold text-slate-800">Dashboard Responden</h1>
+                    <p class="text-slate-500 text-sm mt-1">Terhubung dengan Database Google Sheets</p>
+                </div>
+                <div class="text-sm font-medium px-4 py-2 bg-blue-50 text-blue-700 rounded-lg flex items-center">
+                    <i class="ph-bold ph-user-circle mr-2 text-lg"></i> User: <span id="current-user-display" class="ml-1 font-bold"></span> 
+                    <span id="current-role-display" class="ml-2 px-2 py-1 bg-blue-200 text-blue-800 text-xs rounded-full hidden"></span>
+                </div>
+            </div>
+
+            <!-- Tab Navigation -->
+            <div class="flex space-x-4 border-b border-slate-200 mb-6">
+                <button id="tab-btn-laporan" onclick="switchAdminTab('laporan')" class="py-2 px-4 border-b-2 border-blue-600 font-bold text-blue-600 transition">Kelola Laporan</button>
+                <button id="tab-btn-users" onclick="switchAdminTab('users')" class="hidden py-2 px-4 border-b-2 border-transparent font-medium text-slate-500 hover:text-slate-800 transition">Manajemen User</button>
+            </div>
+
+            <!-- TAB KONTEN: LAPORAN -->
+            <div id="tab-content-laporan" class="space-y-6">
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
+                                <tr>
+                                    <th class="px-6 py-4">ID Tiket / Tanggal</th>
+                                    <th class="px-6 py-4">Pelapor</th>
+                                    <th class="px-6 py-4">Kategori & Laporan</th>
+                                    <th class="px-6 py-4">Status</th>
+                                    <th class="px-6 py-4 text-right">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-body" class="divide-y divide-slate-100">
+                                <!-- Baris tabel akan dirender oleh JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB KONTEN: USERS (Hanya untuk Super Admin) -->
+            <div id="tab-content-users" class="hidden space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Form Tambah User -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 col-span-1 h-fit">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center"><i class="ph-bold ph-user-plus mr-2 text-blue-600"></i> Tambah User Baru</h3>
+                        <form onsubmit="tambahUser(event)" class="space-y-4">
+                            <div>
+                                <label class="text-sm font-semibold text-slate-700">Username</label>
+                                <input id="new-username" required class="w-full mt-1 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Username baru" />
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold text-slate-700">Password</label>
+                                <input id="new-password" required type="password" class="w-full mt-1 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Password user" />
+                            </div>
+                            <div>
+                                <label class="text-sm font-semibold text-slate-700">Role (Peran)</label>
+                                <select id="new-role" class="w-full mt-1 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+                                    <option value="Admin Biasa">Admin Biasa</option>
+                                    <option value="Super Admin">Super Admin</option>
+                                </select>
+                            </div>
+                            <p id="user-msg" class="hidden text-sm font-medium"></p>
+                            <button type="submit" id="btn-adduser" class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition flex items-center justify-center">
+                                <i id="adduser-spinner" class="ph-bold ph-spinner animate-spin mr-2 hidden"></i>
+                                <span id="adduser-text">Simpan User</span>
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Tabel Daftar User -->
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 col-span-2 overflow-hidden">
+                        <div class="px-6 py-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
+                            <h3 class="font-bold text-slate-800">Daftar Admin / Responden</h3>
+                            <button onclick="loadUsers()" class="text-sm text-blue-600 hover:text-blue-800 flex items-center"><i class="ph-bold ph-arrows-clockwise mr-1"></i> Refresh</button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm">
+                                <thead class="bg-white text-slate-600 font-semibold border-b border-slate-200">
+                                    <tr>
+                                        <th class="px-6 py-3">Username</th>
+                                        <th class="px-6 py-3">Role</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="users-table-body" class="divide-y divide-slate-100 bg-white">
+                                    <tr><td colspan="2" class="px-6 py-4 text-center text-slate-500">Memuat data user...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 py-8 text-center text-sm mt-auto">
+        <p>&copy; 2026 LaporWarga - Layanan Pengaduan Masyarakat Terpadu.</p>
+        <p class="mt-1 flex justify-center items-center">
+            <i class="ph-fill ph-shield-warning mr-1"></i> Sistem Keamanan Enkripsi Berlapis
+        </p>
+    </footer>
+
+    <!-- Modal Respon Admin (Pop-up) -->
+    <div id="admin-modal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-slate-800">Tindak Lanjut Laporan</h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 text-2xl font-bold">&times;</button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto space-y-6 flex-1">
+                <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                    <div class="flex justify-between items-start mb-2">
+                        <div id="modal-title" class="text-sm font-bold text-blue-900">TKT-XXXX • Nama</div>
+                        <div id="modal-kategori" class="text-xs text-blue-600 font-medium">Kategori</div>
+                    </div>
+                    <p id="modal-isi" class="text-slate-700 text-sm leading-relaxed">Detail isi laporan...</p>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="space-y-1">
+                        <label class="text-sm font-semibold text-slate-700">Update Status</label>
+                        <select id="modal-status" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                            <option value="Menunggu">Menunggu / Antrean</option>
+                            <option value="Diproses">Sedang Diproses</option>
+                            <option value="Selesai">Selesai / Ditutup</option>
+                        </select>
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="text-sm font-semibold text-slate-700">Tanggapan Resmi</label>
+                        <textarea id="modal-respon" rows="4" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none" placeholder="Tuliskan tanggapan untuk pelapor..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-slate-50 px-6 py-4 border-t border-slate-200 flex justify-end space-x-3">
+                <button onclick="closeModal()" class="px-4 py-2 text-slate-600 font-medium hover:bg-slate-200 rounded-lg transition">Batal</button>
+                <button onclick="simpanUpdateAdmin()" class="px-6 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition flex items-center shadow-md">
+                    <i class="ph-bold ph-check-circle mr-2 text-lg"></i> Simpan Update
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logika Aplikasi (JavaScript) -->
+    <script>
+        /* 
+          ========================================================
+          KONFIGURASI API (UBAH BAGIAN INI)
+          ========================================================
+        */
+        const GOOGLE_SCRIPT_URL = 'https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnRMYBBopwjKJIqyFKCjhrEYoKJRy_cTh7KQ7I2T7xwfYYvmhjoyQgJlfGmmf09q85w05Sl60J9siaxhzz5o_5atLFB-XgdvIinw6e8GTEZLDMYPpMtolhThXR0S8DLD0JkS0WQ5-XBVQiAzGBp1VI0DFE0Nvq2jjbXdQMMYRF5BoxBYa8wM_rHtygrcOo54UP7IoOIvz39RCvYl36u4Am6prsT1U49W5qnauitvHIgcgyBAQ4yRfXn_y7NPCqVgb4cwtNeUYkfwrCxrboRD9X5mXdDSSg&lib=MYq8kcan6zg3MLNyInYiqQhk1jx_7PIoZ';
+
+
+        // ==========================================
+        // MANAJEMEN TAMPILAN (VIEW)
+        // ==========================================
+        function showView(viewId) {
+            // Sembunyikan semua view
+            document.getElementById('public-view').classList.add('hidden');
+            document.getElementById('admin-login-view').classList.add('hidden');
+            document.getElementById('admin-dashboard-view').classList.add('hidden');
+            
+            // Tampilkan view yang dipilih
+            document.getElementById(viewId).classList.remove('hidden');
+
+            // Atur tombol navbar
+            if(viewId === 'public-view') {
+                document.getElementById('btn-portal-admin').classList.remove('hidden');
+                document.getElementById('btn-logout-admin').classList.add('hidden');
+            }
+        }
+
+
+        // ==========================================
+        // FUNGSI PORTAL PUBLIK (KIRIM LAPORAN)
+        // ==========================================
+        async function submitLaporan(e) {
+            e.preventDefault(); // Mencegah reload halaman
+            
+            // Ambil elemen UI
+            const form = document.getElementById('pengaduan-form');
+            const btnSubmit = document.getElementById('btn-submit');
+            const btnIcon = document.getElementById('btn-icon');
+            const btnSpinner = document.getElementById('btn-spinner');
+            const btnText = document.getElementById('btn-text');
+            const errorMsg = document.getElementById('submit-error');
+            const successView = document.getElementById('submit-success');
+            
+            // Ambil nilai dari form
+            const formData = {
+                nama: document.getElementById('input-nama').value,
+                nik: document.getElementById('input-nik').value,
+                kategori: document.getElementById('input-kategori').value,
+                lokasi: document.getElementById('input-lokasi').value,
+                laporan: document.getElementById('input-laporan').value
+            };
+
+            // Sanitasi Dasar (Hapus tag HTML jika ada)
+            Object.keys(formData).forEach(key => {
+                formData[key] = formData[key].replace(/<[^>]*>?/gm, '');
+            });
+
+            // Set state menjadi 'Loading'
+            btnSubmit.classList.add('bg-slate-400', 'cursor-not-allowed');
+            btnSubmit.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+            btnSubmit.disabled = true;
+            btnIcon.classList.add('hidden');
+            btnSpinner.classList.remove('hidden');
+            btnText.innerText = 'Memproses...';
+            errorMsg.classList.add('hidden');
+
+            try {
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // text/plain untuk bypass CORS
+                    body: JSON.stringify({ action: 'add', data: formData })
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    // Berhasil
+                    form.classList.add('hidden');
+                    successView.classList.remove('hidden');
+                    document.getElementById('ticket-id-display').innerText = result.ticketId;
+                } else {
+                    // Gagal dari server
+                    errorMsg.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error("Fetch Error:", error);
+                // Gagal karena jaringan / URL salah
+                errorMsg.classList.remove('hidden');
+            } finally {
+                // Kembalikan state tombol
+                btnSubmit.classList.remove('bg-slate-400', 'cursor-not-allowed');
+                btnSubmit.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                btnSubmit.disabled = false;
+                btnIcon.classList.remove('hidden');
+                btnSpinner.classList.add('hidden');
+                btnText.innerText = 'Kirim Laporan';
+            }
+        }
+
+        function resetForm() {
+            document.getElementById('pengaduan-form').reset();
+            document.getElementById('pengaduan-form').classList.remove('hidden');
+            document.getElementById('submit-success').classList.add('hidden');
+        }
+
+
+        // ==========================================
+        // FUNGSI ADMIN DASHBOARD & MANAJEMEN USER
+        // ==========================================
+        let currentUserData = null;
+
+        async function loginAdmin(e) {
+            e.preventDefault();
+            const usr = document.getElementById('admin-username').value;
+            const pw = document.getElementById('admin-password').value;
+            const errorMsg = document.getElementById('login-error-msg');
+            const btnLogin = document.getElementById('btn-login');
+            const spinner = document.getElementById('login-spinner');
+            const btnText = document.getElementById('login-text');
+            
+            // UI State - Loading
+            errorMsg.classList.add('hidden');
+            btnLogin.disabled = true;
+            spinner.classList.remove('hidden');
+            btnText.innerText = 'Memverifikasi...';
+
+            try {
+                // Melakukan pengecekan ke Google Sheets Database
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ 
+                        action: 'login', 
+                        data: { username: usr, password: pw } 
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    // Login Berhasil
+                    currentUserData = result.user;
+                    
+                    // Update tampilan profil di Dashboard
+                    document.getElementById('current-user-display').innerText = currentUserData.username;
+                    document.getElementById('current-role-display').innerText = currentUserData.role;
+                    document.getElementById('current-role-display').classList.remove('hidden');
+                    
+                    // Role-Based Access: Buka Tab Manajemen User JIKA dia Super Admin
+                    if(currentUserData.role === 'Super Admin') {
+                        document.getElementById('tab-btn-users').classList.remove('hidden');
+                        loadUsers(); // Tarik data user secara otomatis
+                    } else {
+                        document.getElementById('tab-btn-users').classList.add('hidden');
+                    }
+                    
+                    // Bersihkan form & ganti Tampilan
+                    document.getElementById('admin-username').value = '';
+                    document.getElementById('admin-password').value = '';
+                    showView('admin-dashboard-view');
+                    switchAdminTab('laporan'); // Set default buka tab laporan
+                    
+                    document.getElementById('btn-portal-admin').classList.add('hidden');
+                    document.getElementById('btn-logout-admin').classList.remove('hidden');
+                    
+                    renderAdminTable(); // Render laporan
+                } else {
+                    errorMsg.innerText = result.message || 'Username atau Password salah.';
+                    errorMsg.classList.remove('hidden');
+                }
+            } catch (error) {
+                errorMsg.innerText = 'Gagal terhubung ke database. Periksa koneksi/URL Anda.';
+                errorMsg.classList.remove('hidden');
+            } finally {
+                // Kembalikan tombol seperti semula
+                btnLogin.disabled = false;
+                spinner.classList.add('hidden');
+                btnText.innerText = 'Masuk ke Dashboard';
+            }
+        }
+
+        function logoutAdmin() {
+            currentUserData = null;
+            showView('public-view');
+        }
+
+        // Fungsi Perpindahan Tab (Laporan vs User)
+        function switchAdminTab(tabName) {
+            const tabLaporanBtn = document.getElementById('tab-btn-laporan');
+            const tabUsersBtn = document.getElementById('tab-btn-users');
+            const contentLaporan = document.getElementById('tab-content-laporan');
+            const contentUsers = document.getElementById('tab-content-users');
+
+            if(tabName === 'laporan') {
+                tabLaporanBtn.classList.replace('border-transparent', 'border-blue-600');
+                tabLaporanBtn.classList.replace('text-slate-500', 'text-blue-600');
+                tabUsersBtn.classList.replace('border-blue-600', 'border-transparent');
+                tabUsersBtn.classList.replace('text-blue-600', 'text-slate-500');
+                
+                contentLaporan.classList.remove('hidden');
+                contentUsers.classList.add('hidden');
+            } else if (tabName === 'users') {
+                tabUsersBtn.classList.replace('border-transparent', 'border-blue-600');
+                tabUsersBtn.classList.replace('text-slate-500', 'text-blue-600');
+                tabLaporanBtn.classList.replace('border-blue-600', 'border-transparent');
+                tabLaporanBtn.classList.replace('text-blue-600', 'text-slate-500');
+                
+                contentUsers.classList.remove('hidden');
+                contentLaporan.classList.add('hidden');
+            }
+        }
+
+        // Fungsi Load Daftar User dari Database
+        async function loadUsers() {
+            const tbody = document.getElementById('users-table-body');
+            tbody.innerHTML = '<tr><td colspan="2" class="px-6 py-4 text-center text-slate-500"><i class="ph-bold ph-spinner animate-spin inline-block mr-2"></i> Memuat data...</td></tr>';
+            
+            try {
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'getUsers' })
+                });
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    tbody.innerHTML = '';
+                    result.data.forEach(user => {
+                        const roleStyle = user.role === 'Super Admin' ? 'bg-purple-100 text-purple-800' : 'bg-slate-100 text-slate-700';
+                        tbody.innerHTML += `
+                            <tr class="hover:bg-slate-50 transition">
+                                <td class="px-6 py-4 font-bold text-slate-800">${user.username}</td>
+                                <td class="px-6 py-4">
+                                    <span class="px-3 py-1 rounded-full text-xs font-bold ${roleStyle}">${user.role}</span>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                }
+            } catch (error) {
+                tbody.innerHTML = '<tr><td colspan="2" class="px-6 py-4 text-center text-red-500 font-bold">Gagal memuat data.</td></tr>';
+            }
+        }
+
+        // Fungsi Simpan User ke Database
+        async function tambahUser(e) {
+            e.preventDefault();
+            const usr = document.getElementById('new-username').value;
+            const pw = document.getElementById('new-password').value;
+            const role = document.getElementById('new-role').value;
+            
+            const btn = document.getElementById('btn-adduser');
+            const spinner = document.getElementById('adduser-spinner');
+            const btnText = document.getElementById('adduser-text');
+            const msg = document.getElementById('user-msg');
+            
+            btn.disabled = true;
+            spinner.classList.remove('hidden');
+            btnText.innerText = 'Menyimpan...';
+            msg.classList.add('hidden');
+
+            try {
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ 
+                        action: 'addUser', 
+                        data: { username: usr, password: pw, role: role } 
+                    })
+                });
+                
+                const result = await response.json();
+                if (result.status === 'success') {
+                    msg.innerText = 'User berhasil ditambahkan!';
+                    msg.className = 'text-sm font-medium text-green-600 block mt-3';
+                    document.getElementById('new-username').value = '';
+                    document.getElementById('new-password').value = '';
+                    loadUsers(); // Refresh tabel setelah ditambah
+                } else {
+                    msg.innerText = result.message || 'Gagal menambahkan user.';
+                    msg.className = 'text-sm font-medium text-red-600 block mt-3';
+                }
+            } catch (error) {
+                msg.innerText = 'Terjadi kesalahan koneksi.';
+                msg.className = 'text-sm font-medium text-red-600 block mt-3';
+            } finally {
+                btn.disabled = false;
+                spinner.classList.add('hidden');
+                btnText.innerText = 'Simpan User';
+            }
+        }
+
+        // Mockup Data Internal untuk Dashboard Admin
+        let dataLaporan = [
+            { id: 'TKT-91823', tanggal: '22 Aug 2026', nama: 'Budi Santoso', kategori: 'Infrastruktur', isi: 'Jalan berlubang parah di Jl. Merdeka.', status: 'Menunggu', respon: '' },
+            { id: 'TKT-10294', tanggal: '21 Aug 2026', nama: 'Siti Aminah', kategori: 'Pelayanan Publik', isi: 'Blangko KTP kosong sudah 2 bulan.', status: 'Diproses', respon: 'Sedang berkoordinasi.' },
+            { id: 'TKT-44912', tanggal: '20 Aug 2026', nama: 'Anonim', kategori: 'Lingkungan', isi: 'Tumpukan sampah liar di pasar.', status: 'Selesai', respon: 'Telah dibersihkan pagi ini.' }
+        ];
+        let currentSelectedId = null;
+
+        // Fungsi Warna Status
+        function getStatusColor(status) {
+            if(status === 'Menunggu') return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+            if(status === 'Diproses') return 'bg-blue-100 text-blue-800 border-blue-200';
+            if(status === 'Selesai') return 'bg-green-100 text-green-800 border-green-200';
+            return 'bg-slate-100 text-slate-800';
+        }
+
+        function renderAdminTable() {
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = ''; // Kosongkan tabel
+            
+            dataLaporan.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50 transition';
+                tr.innerHTML = `
+                    <td class="px-6 py-4">
+                        <div class="font-bold text-slate-800">${item.id}</div>
+                        <div class="text-xs text-slate-500">${item.tanggal}</div>
+                    </td>
+                    <td class="px-6 py-4 font-medium">${item.nama}</td>
+                    <td class="px-6 py-4">
+                        <div class="inline-block px-2 py-1 bg-slate-100 rounded text-xs font-semibold mb-1 text-slate-600">${item.kategori}</div>
+                        <div class="text-slate-700 line-clamp-2">${item.isi}</div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="px-3 py-1 rounded-full text-xs font-bold border ${getStatusColor(item.status)}">${item.status}</span>
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <button onclick="openModal('${item.id}')" class="text-blue-600 hover:text-blue-800 font-medium flex items-center justify-end w-full">
+                            <i class="ph-bold ph-chat-teardrop-text mr-1 text-lg"></i> Respon
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function openModal(id) {
+            const item = dataLaporan.find(d => d.id === id);
+            if(item) {
+                currentSelectedId = id;
+                document.getElementById('modal-title').innerText = `${item.id} • ${item.nama}`;
+                document.getElementById('modal-kategori').innerText = item.kategori;
+                document.getElementById('modal-isi').innerText = item.isi;
+                document.getElementById('modal-status').value = item.status;
+                document.getElementById('modal-respon').value = item.respon;
+                document.getElementById('admin-modal').classList.remove('hidden');
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('admin-modal').classList.add('hidden');
+            currentSelectedId = null;
+        }
+
+        function simpanUpdateAdmin() {
+            if(currentSelectedId) {
+                const index = dataLaporan.findIndex(d => d.id === currentSelectedId);
+                if(index !== -1) {
+                    dataLaporan[index].status = document.getElementById('modal-status').value;
+                    dataLaporan[index].respon = document.getElementById('modal-respon').value;
+                    renderAdminTable(); // Update tampilan tabel
+                    closeModal(); // Tutup modal
+                    
+                    // Catatan: Pada aplikasi riil, disini tempat melakukan Fetch (Update) ke Google Scripts API.
+                }
+            }
+        }
+    </script>
+</body>
+</html>
