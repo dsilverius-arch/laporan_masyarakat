@@ -29,10 +29,10 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
                 <div class="flex items-center cursor-pointer space-x-3" onclick="showView('public-view')">
-                    <img src="Logo_Nisel.jpg" alt="Logo Nias Selatan" class="h-10 w-auto object-contain drop-shadow-sm" />
+                    <img src="Logo_Nisel.jpg" alt="Logo Nias Selatan" class="h-10 w-auto object-contain drop-shadow-sm bg-white p-0.5 rounded shadow-sm" onerror="this.onerror=null; this.src='https://placehold.co/40x40/red/white?text=Nisel';" />
                     <span class="font-bold text-xl tracking-tight">Lapor ASN</span>
-                    <img src="Logo_EVP.png" alt="Logo Bangga Melayani Bangsa" class="h-8 w-auto object-contain bg-white px-2 py-1 rounded shadow-sm" />
-                    <img src="Logo_Badan_Kepegawaian_Negara.png" alt="Logo Badan Kepegawaian Negara" class="h-8 w-auto object-contain bg-white px-2 py-1 rounded shadow-sm" />
+                    <img src="Logo_EVP.png" alt="Logo Bangga Melayani Bangsa" class="h-8 w-auto object-contain bg-white px-2 py-1 rounded shadow-sm" onerror="this.onerror=null; this.src='https://placehold.co/60x30/white/red?text=EVP';" />
+                    <img src="Logo_Badan_Kepegawaian_Negara.png" alt="Logo Badan Kepegawaian Negara" class="h-8 w-auto object-contain bg-white px-2 py-1 rounded shadow-sm" onerror="this.onerror=null; this.src='https://placehold.co/60x30/white/blue?text=BKN';" />
                 </div>
                 <div>
                     <!-- Tombol Login Admin -->
@@ -177,7 +177,7 @@
         <div id="admin-login-view" class="hidden fade-in max-w-md mx-auto mt-12 bg-white p-8 rounded-2xl shadow-lg border border-slate-100">
             <div class="text-center mb-8">
                 <div class="w-20 h-20 mx-auto mb-4 flex items-center justify-center">
-                    <img src="Logo_Nisel.jpg" alt="Logo Nias Selatan" class="w-full h-full object-contain drop-shadow-sm" />
+                    <img src="Logo_Nisel.jpg" alt="Logo Nias Selatan" class="w-full h-full object-contain drop-shadow-sm" onerror="this.onerror=null; this.src='https://placehold.co/80x80/red/white?text=Nisel';" />
                 </div>
                 <h2 class="text-2xl font-bold text-slate-800">Login Responden</h2>
                 <p class="text-slate-500 text-sm mt-1">Area terbatas khusus petugas administrasi.</p>
@@ -317,6 +317,19 @@
         <p>&copy; 2026 Layanan Pengaduan Masyarakat Terpadu.</p>
     </footer>
 
+    <!-- Custom Modal Konfirmasi Hapus -->
+    <div id="delete-modal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl w-full max-w-sm shadow-2xl p-6 text-center space-y-4">
+            <div class="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto text-2xl font-bold">!</div>
+            <h3 class="text-lg font-bold text-slate-800">Hapus Tiket?</h3>
+            <p id="delete-msg" class="text-sm text-slate-600">Apakah Anda yakin ingin menghapus tiket ini secara permanen?</p>
+            <div class="flex justify-center space-x-3 pt-2">
+                <button onclick="closeDeleteModal()" class="px-4 py-2 text-slate-600 font-medium hover:bg-slate-100 rounded-lg transition">Batal</button>
+                <button id="btn-confirm-delete" class="px-5 py-2 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition shadow-md">Ya, Hapus</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal Respon Admin (Pop-up) -->
     <div id="admin-modal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
         <div class="bg-white rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
@@ -402,13 +415,13 @@
 
             if (file) {
                 if (file.size > 5 * 1024 * 1024) {
-                    alert("Ukuran file bukti maksimal 5MB! Silakan kompres atau pilih file lain.");
+                    showCustomMessage("Ukuran file bukti maksimal 5MB! Silakan kompres atau pilih file lain.");
                     return;
                 }
                 
                 const allowedTypes = ['image/jpeg', 'image/jpg', 'application/pdf'];
                 if (!allowedTypes.includes(file.type)) {
-                    alert("Format file bukti harus berakhiran JPG, JPEG, atau PDF!");
+                    showCustomMessage("Format file bukti harus berakhiran JPG, JPEG, atau PDF!");
                     return;
                 }
 
@@ -489,6 +502,13 @@
             }
         }
 
+        function showCustomMessage(msg) {
+            // Helper for inline warnings without alert()
+            const errorBanner = document.getElementById('submit-error');
+            errorBanner.querySelector('span') ? errorBanner.querySelector('span').innerText = msg : errorBanner.innerText = msg;
+            errorBanner.classList.remove('hidden');
+        }
+
         function resetForm() {
             document.getElementById('pengaduan-form').reset();
             document.getElementById('pengaduan-form').classList.remove('hidden');
@@ -499,7 +519,7 @@
             const ticketId = document.getElementById('track-ticket-input').value.trim();
             const resultBox = document.getElementById('track-result');
             if(!ticketId) {
-                alert('Masukkan ID Tiket terlebih dahulu.');
+                showCustomMessage('Masukkan ID Tiket terlebih dahulu.');
                 return;
             }
             resultBox.classList.remove('hidden');
@@ -788,7 +808,7 @@
                                     <button onclick="openModal('${item.id}')" class="text-red-600 hover:text-red-800 font-medium flex items-center">
                                         <i class="ph-bold ph-chat-teardrop-text mr-1 text-lg"></i> Respon
                                     </button>
-                                    <button onclick="hapusLaporan('${item.id}')" class="text-slate-500 hover:text-slate-700 font-medium flex items-center">
+                                    <button onclick="confirmDelete('${item.id}')" class="text-slate-500 hover:text-red-600 font-medium flex items-center">
                                         <i class="ph-bold ph-trash mr-1 text-lg"></i> Hapus
                                     </button>
                                 </div>
@@ -804,11 +824,24 @@
             }
         }
 
-        async function hapusLaporan(id) {
-            if(!confirm(`PERINGATAN!\n\nApakah Anda yakin ingin menghapus tiket ${id} secara permanen? Data yang dihapus tidak dapat dikembalikan.`)) {
-                return;
-            }
+        let pendingDeleteId = null;
 
+        function confirmDelete(id) {
+            pendingDeleteId = id;
+            document.getElementById('delete-msg').innerText = `Apakah Anda yakin ingin menghapus tiket ${id} secara permanen?`;
+            document.getElementById('delete-modal').classList.remove('hidden');
+            document.getElementById('btn-confirm-delete').onclick = function() {
+                closeDeleteModal();
+                hapusLaporan(pendingDeleteId);
+            };
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('delete-modal').classList.add('hidden');
+            pendingDeleteId = null;
+        }
+
+        async function hapusLaporan(id) {
             const tbody = document.getElementById('table-body');
             tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-4 text-center text-slate-500"><i class="ph-bold ph-spinner animate-spin inline-block mr-2"></i> Menghapus tiket ${id}...</td></tr>`;
 
@@ -824,11 +857,9 @@
                     renderAdminTable(); 
                     loadPublicStats();  
                 } else {
-                    alert('Gagal menghapus data.');
                     renderAdminTable();
                 }
             } catch (err) {
-                alert('Terjadi kesalahan koneksi.');
                 renderAdminTable();
             }
         }
@@ -883,11 +914,9 @@
                     if(result.status === 'success') {
                         renderAdminTable();
                         closeModal();
-                    } else {
-                        alert('Gagal menyimpan update ke database.');
                     }
                 } catch (err) {
-                    alert('Terjadi kesalahan koneksi.');
+                    console.error(err);
                 } finally {
                     btnSave.disabled = false;
                     btnSave.innerHTML = '<i class="ph-bold ph-check-circle mr-2 text-lg"></i> Simpan Update';
