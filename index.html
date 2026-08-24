@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lapor ASN</title>
-    <link rel="icon" href="Logo_Nisel.png" type="image/png"
+    <!-- Perbaikan penutup tag link -->
+    <link rel="icon" href="Logo_Nisel.png" type="image/png">
     
     <!-- Tailwind CSS untuk Styling -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -385,7 +386,16 @@
     <script>
         const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzcUKFKOXyY2KzNKcdOx6emt84L7tC5MLHnkjrHOG0eo4Zfdcft9cHAle5RZhM0KCg4Aw/exec';
 
+        // Variabel penanda apakah ada user yg login
+        let currentUserData = null;
+
         function showView(viewId) {
+            // MENCEGAH akses ke halaman publik jika admin sedang login
+            if (viewId === 'public-view' && currentUserData !== null) {
+                alert('Tindakan ditolak! Silakan "Logout" terlebih dahulu jika ingin kembali ke Halaman Publik.');
+                return; // Hentikan fungsi, jangan pindah halaman
+            }
+
             document.getElementById('public-view').classList.add('hidden');
             document.getElementById('admin-login-view').classList.add('hidden');
             document.getElementById('admin-dashboard-view').classList.add('hidden');
@@ -585,8 +595,6 @@
             loadPublicStats();
         };
 
-        let currentUserData = null;
-
         async function loginAdmin(e) {
             e.preventDefault();
             const usr = document.getElementById('admin-username').value;
@@ -646,13 +654,13 @@
             } finally {
                 btnLogin.disabled = false;
                 spinner.classList.add('hidden');
-                btnText.innerText = 'Masuk ke Dashboard';
+                btnText.innerText = 'Masuk';
             }
         }
 
         function logoutAdmin() {
-            currentUserData = null;
-            showView('public-view');
+            currentUserData = null; // Hapus sesi admin
+            showView('public-view'); // Paksa kembali ke menu publik
         }
 
         function switchAdminTab(tabName) {
