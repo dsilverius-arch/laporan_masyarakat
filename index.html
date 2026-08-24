@@ -58,7 +58,7 @@
                     <img src="BUP&WABUP_NISEL.png" alt="Pemimpin Nisel" class="h-auto w-auto object-contain"/>
                     <h1 class="text-4xl font-extrabold text-slate-900 leading-tight">
                         Layanan Aspirasi & <br/>
-                        <span class="text-red-600">Pengaduan Online</span> Masyarakat
+                        <span class="text-red-600">Pengaduan Online</span> Rakyat
                     </h1>
                     <p class="mt-4 text-lg text-slate-600 leading-relaxed">
                         Sampaikan laporan dan saran Anda terkait fasilitas publik, pelayanan masyarakat 
@@ -131,8 +131,23 @@
                             </div>
                         </div>
 
+                        <!-- RADIO BUTTON JENIS LAPORAN DITAMBAHKAN DI SINI -->
+                        <div class="space-y-2">
+                            <label class="text-sm font-semibold text-slate-700">Jenis Laporan</label>
+                            <div class="flex space-x-6">
+                                <label class="flex items-center cursor-pointer">
+                                    <input type="radio" name="jenis_laporan" value="Pengaduan" class="w-4 h-4 text-red-600 border-slate-300 focus:ring-red-500" checked>
+                                    <span class="ml-2 text-sm text-slate-700">Pengaduan</span>
+                                </label>
+                                <label class="flex items-center cursor-pointer">
+                                    <input type="radio" name="jenis_laporan" value="Saran" class="w-4 h-4 text-red-600 border-slate-300 focus:ring-red-500">
+                                    <span class="ml-2 text-sm text-slate-700">Saran</span>
+                                </label>
+                            </div>
+                        </div>
+
                         <div class="space-y-1">
-                            <label class="text-sm font-semibold text-slate-700">Kategori Laporan</label>
+                            <label class="text-sm font-semibold text-slate-700">Kategori</label>
                             <select id="input-kategori" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-red-500 outline-none bg-white" required>
                                 <option value="">-- Pilih Kategori --</option>
                                 <option value="Disiplin">Disiplin</option>
@@ -150,8 +165,8 @@
                         </div>
 
                         <div class="space-y-1">
-                            <label class="text-sm font-semibold text-slate-700">Detail Laporan</label>
-                            <textarea id="input-laporan" required rows="4" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-red-500 outline-none resize-none" placeholder="Jelaskan secara detail kejadian atau keluhan Anda..."></textarea>
+                            <label class="text-sm font-semibold text-slate-700">Detail Laporan / Saran</label>
+                            <textarea id="input-laporan" required rows="4" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-red-500 outline-none resize-none" placeholder="Jelaskan secara detail kejadian atau saran Anda..."></textarea>
                         </div>
 
                         <div class="space-y-1">
@@ -344,7 +359,7 @@
                 <div class="bg-red-50 p-4 rounded-xl border border-red-100">
                     <div class="flex justify-between items-start mb-2">
                         <div id="modal-title" class="text-sm font-bold text-red-900">TKT-XXXX • Nama</div>
-                        <div id="modal-kategori" class="text-xs text-red-600 font-medium">Kategori</div>
+                        <div id="modal-kategori" class="text-xs text-red-600 font-medium">[Jenis] Kategori</div>
                     </div>
                     <p id="modal-isi" class="text-slate-700 text-sm leading-relaxed">Detail isi laporan...</p>
                     
@@ -456,6 +471,8 @@
 
             // Ambil nilai dari form
             const formData = {
+                // Menambahkan jenis (mengambil dari radio button yg dipilih)
+                jenis: document.querySelector('input[name="jenis_laporan"]:checked').value,
                 nama: document.getElementById('input-nama').value,
                 nik: document.getElementById('input-nik').value,
                 kategori: document.getElementById('input-kategori').value,
@@ -548,16 +565,18 @@
                     // Tombol Bukti di Pencarian Tiket Publik
                     let buktiHtml = '';
                     if (d.bukti && d.bukti.startsWith('http')) {
-                        buktiHtml = `<div class="mb-1 mt-3"><a href="${d.bukti}" target="_blank" class="inline-flex items-center text-xs font-bold bg-white border border-slate-300 text-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-100 transition shadow-sm"><i class="ph-bold ph-paperclip mr-2 text-base"></i> Lihat Bukti Laporan</a></div>`;
+                        buktiHtml = `<div class="mb-1 mt-3"><a href="${d.bukti}" target="_blank" class="inline-flex items-center text-xs font-bold bg-white border border-slate-300 text-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-100 transition shadow-sm"><i class="ph-bold ph-paperclip mr-2 text-base"></i> Lihat Bukti Dukung</a></div>`;
                     }
                     
                     // Render Hasil Pencarian (menggunakan neutral bg-slate)
+                    // Ditambahkan tampilan Jenis Laporan
                     resultBox.innerHTML = `
                         <div class="font-bold text-slate-800 mb-1">Tiket: ${d.id}</div>
                         <div class="text-xs text-slate-500 mb-2">Tanggal: ${d.tanggal}</div>
                         <div class="mb-1"><span class="font-semibold">Status:</span> <span class="px-2 py-0.5 rounded text-xs font-bold bg-slate-200 text-slate-800">${d.status}</span></div>
+                        <div class="mb-1"><span class="font-semibold">Jenis:</span> ${d.jenis || '-'}</div>
                         <div class="mb-1"><span class="font-semibold">Kategori:</span> ${d.kategori}</div>
-                        <div class="mb-1"><span class="font-semibold">Keluhan:</span> ${d.laporan}</div>
+                        <div class="mb-1"><span class="font-semibold">Keluhan/Saran:</span> ${d.laporan}</div>
                         ${buktiHtml}
                         <div class="mt-4 pt-3 border-t border-slate-200"><span class="font-semibold text-red-700">Tanggapan Admin:</span> <div class="mt-1">${d.respon || 'Belum ada tanggapan'}</div></div>
                     `;
@@ -798,6 +817,10 @@
                     dataLaporan.forEach(item => {
                         const tr = document.createElement('tr');
                         tr.className = 'hover:bg-slate-50 transition';
+                        
+                        // Menambahkan [Jenis Laporan] di samping nama Kategori agar Admin bisa melihatnya
+                        const jenisTeks = item.jenis ? `[${item.jenis}]` : '[Pengaduan]';
+
                         tr.innerHTML = `
                             <td class="px-6 py-4">
                                 <div class="font-bold text-slate-800">${item.id}</div>
@@ -805,7 +828,7 @@
                             </td>
                             <td class="px-6 py-4 font-medium">${item.nama}</td>
                             <td class="px-6 py-4">
-                                <div class="inline-block px-2 py-1 bg-slate-100 rounded text-xs font-semibold mb-1 text-slate-600">${item.kategori}</div>
+                                <div class="inline-block px-2 py-1 bg-slate-100 rounded text-xs font-semibold mb-1 text-slate-600">${jenisTeks} ${item.kategori}</div>
                                 <div class="text-slate-700 line-clamp-2">${item.laporan}</div>
                             </td>
                             <td class="px-6 py-4">
@@ -876,8 +899,10 @@
             const item = dataLaporan.find(d => d.id === id);
             if(item) {
                 currentSelectedId = id;
+                const jenisTeks = item.jenis ? `[${item.jenis}]` : '[Pengaduan]';
+                
                 document.getElementById('modal-title').innerText = `${item.id} • ${item.nama}`;
-                document.getElementById('modal-kategori').innerText = item.kategori;
+                document.getElementById('modal-kategori').innerText = `${jenisTeks} ${item.kategori}`;
                 document.getElementById('modal-isi').innerText = item.laporan;
                 
                 const buktiContainer = document.getElementById('modal-bukti-container');
