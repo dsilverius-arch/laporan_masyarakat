@@ -48,7 +48,6 @@
         </div>
     </nav>
 
-    <!-- Main Content Area -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full">
         
         <div id="public-view" class="fade-in grid grid-cols-1 md:grid-cols-2 gap-12">
@@ -400,13 +399,11 @@
     <script>
         const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzcUKFKOXyY2KzNKcdOx6emt84L7tC5MLHnkjrHOG0eo4Zfdcft9cHAle5RZhM0KCg4Aw/exec';
 
-        // Variabel penanda apakah ada user yg login
         let currentUserData = null;
 
         function showView(viewId) {
-            // MENCEGAH akses ke halaman publik jika admin sedang login tanpa memunculkan pop-up alert
             if (viewId === 'public-view' && currentUserData !== null) {
-                return; // Hentikan fungsi diam-diam di belakang layar
+                return; // Prevent returning to public view while admin session is active
             }
 
             document.getElementById('public-view').classList.add('hidden');
@@ -418,7 +415,7 @@
             if(viewId === 'public-view') {
                 document.getElementById('btn-portal-admin').classList.remove('hidden');
                 document.getElementById('btn-logout-admin').classList.add('hidden');
-                loadPublicStats(); // Refresh statistik saat kembali ke halaman utama
+                loadPublicStats();
             }
         }
 
@@ -433,7 +430,6 @@
             const errorMsg = document.getElementById('submit-error');
             const successView = document.getElementById('submit-success');
             
-            // Proses File Bukti (Maks 5MB)
             const fileInput = document.getElementById('input-file');
             const file = fileInput.files[0];
             let fileData = null;
@@ -450,7 +446,6 @@
                     return;
                 }
 
-                // Convert file ke format Base64 Text agar bisa dikirim ke Google Script
                 const getBase64 = (f) => new Promise((resolve, reject) => {
                     const reader = new FileReader();
                     reader.onload = () => resolve(reader.result.split(',')[1]);
@@ -469,7 +464,6 @@
                 };
             }
 
-            // Ambil nilai dari form
             const formData = {
                 jenis: document.querySelector('input[name="jenis_laporan"]:checked').value,
                 nama: document.getElementById('input-nama').value,
@@ -477,17 +471,15 @@
                 kategori: document.getElementById('input-kategori').value,
                 lokasi: document.getElementById('input-lokasi').value,
                 laporan: document.getElementById('input-laporan').value,
-                file: fileData // Menambahkan payload file
+                file: fileData
             };
 
-            // Sanitasi Dasar (Hapus tag HTML jika ada)
             Object.keys(formData).forEach(key => {
                 if (typeof formData[key] === 'string') {
                     formData[key] = formData[key].replace(/<[^>]*>?/gm, '');
                 }
             });
 
-            // Set state menjadi 'Loading'
             btnSubmit.classList.add('bg-slate-400', 'cursor-not-allowed');
             btnSubmit.classList.remove('bg-red-600', 'hover:bg-red-700');
             btnSubmit.disabled = true;
@@ -506,11 +498,10 @@
                 const result = await response.json();
                 
                 if (result.status === 'success') {
-                    // Berhasil
                     form.classList.add('hidden');
                     successView.classList.remove('hidden');
                     document.getElementById('ticket-id-display').innerText = result.ticketId;
-                    loadPublicStats(); // Update otomatis angka statistik
+                    loadPublicStats();
                 } else {
                     errorMsg.classList.remove('hidden');
                 }
@@ -518,7 +509,6 @@
                 console.error("Fetch Error:", error);
                 errorMsg.classList.remove('hidden');
             } finally {
-                // Kembalikan state tombol
                 btnSubmit.classList.remove('bg-slate-400', 'cursor-not-allowed');
                 btnSubmit.classList.add('bg-red-600', 'hover:bg-red-700');
                 btnSubmit.disabled = false;
