@@ -55,7 +55,7 @@
             <!-- Left Column: Info & Tracker -->
             <div class="space-y-8">
                 <div>
-                    <img src="BUP&WABUP_NISEL.png" alt="Pemimpin Nisel" class="h-auto w-auto object-contain"/>
+                    <img src="BUP&WABUP_NISEL.png" alt="Pemimpin Nisel" class="h-auto w-auto object-contain mb-4"/>
                     <h1 class="text-4xl font-extrabold text-slate-900 leading-tight">
                         Layanan Aspirasi & <br/>
                         <span class="text-red-600">Pengaduan Online</span> Rakyat
@@ -131,7 +131,7 @@
                             </div>
                         </div>
 
-                        <!-- RADIO BUTTON JENIS LAPORAN DITAMBAHKAN DI SINI -->
+                        <!-- RADIO BUTTON JENIS LAPORAN -->
                         <div class="space-y-2">
                             <label class="text-sm font-semibold text-slate-700">Jenis Laporan</label>
                             <div class="flex space-x-6">
@@ -471,7 +471,6 @@
 
             // Ambil nilai dari form
             const formData = {
-                // Menambahkan jenis (mengambil dari radio button yg dipilih)
                 jenis: document.querySelector('input[name="jenis_laporan"]:checked').value,
                 nama: document.getElementById('input-nama').value,
                 nik: document.getElementById('input-nik').value,
@@ -530,7 +529,6 @@
         }
 
         function showCustomMessage(msg) {
-            // Helper for inline warnings without alert()
             const errorBanner = document.getElementById('submit-error');
             errorBanner.querySelector('span') ? errorBanner.querySelector('span').innerText = msg : errorBanner.innerText = msg;
             errorBanner.classList.remove('hidden');
@@ -562,19 +560,16 @@
                 if(result.status === 'success') {
                     const d = result.data;
                     
-                    // Tombol Bukti di Pencarian Tiket Publik
                     let buktiHtml = '';
                     if (d.bukti && d.bukti.startsWith('http')) {
-                        buktiHtml = `<div class="mb-1 mt-3"><a href="${d.bukti}" target="_blank" class="inline-flex items-center text-xs font-bold bg-white border border-slate-300 text-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-100 transition shadow-sm"><i class="ph-bold ph-paperclip mr-2 text-base"></i> Lihat Bukti Dukung</a></div>`;
+                        buktiHtml = `<div class="mb-1 mt-3"><a href="${d.bukti}" target="_blank" class="inline-flex items-center text-xs font-bold bg-white border border-slate-300 text-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-100 transition shadow-sm"><i class="ph-bold ph-paperclip mr-2 text-base"></i> Lihat Bukti Laporan</a></div>`;
                     }
                     
-                    // Render Hasil Pencarian (menggunakan neutral bg-slate)
-                    // Ditambahkan tampilan Jenis Laporan
                     resultBox.innerHTML = `
                         <div class="font-bold text-slate-800 mb-1">Tiket: ${d.id}</div>
                         <div class="text-xs text-slate-500 mb-2">Tanggal: ${d.tanggal}</div>
                         <div class="mb-1"><span class="font-semibold">Status:</span> <span class="px-2 py-0.5 rounded text-xs font-bold bg-slate-200 text-slate-800">${d.status}</span></div>
-                        <div class="mb-1"><span class="font-semibold">Jenis:</span> ${d.jenis || '-'}</div>
+                        <div class="mb-1"><span class="font-semibold">Jenis:</span> ${d.jenis || 'Pengaduan'}</div>
                         <div class="mb-1"><span class="font-semibold">Kategori:</span> ${d.kategori}</div>
                         <div class="mb-1"><span class="font-semibold">Keluhan/Saran:</span> ${d.laporan}</div>
                         ${buktiHtml}
@@ -588,7 +583,6 @@
             }
         }
 
-        // Fungsi mengambil statistik real-time dari database
         async function loadPublicStats() {
             try {
                 const response = await fetch(GOOGLE_SCRIPT_URL, {
@@ -607,7 +601,6 @@
             }
         }
 
-        // Panggil otomatis saat halaman pertama kali dibuka
         window.onload = function() {
             loadPublicStats();
         };
@@ -676,8 +669,8 @@
         }
 
         function logoutAdmin() {
-            currentUserData = null; // Hapus sesi admin
-            showView('public-view'); // Paksa kembali ke menu publik
+            currentUserData = null;
+            showView('public-view');
         }
 
         function switchAdminTab(tabName) {
@@ -818,7 +811,6 @@
                         const tr = document.createElement('tr');
                         tr.className = 'hover:bg-slate-50 transition';
                         
-                        // Menambahkan [Jenis Laporan] di samping nama Kategori agar Admin bisa melihatnya
                         const jenisTeks = item.jenis ? `[${item.jenis}]` : '[Pengaduan]';
 
                         tr.innerHTML = `
