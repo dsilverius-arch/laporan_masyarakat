@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lapor ASN</title>
-    <!-- Perbaikan penutup tag link -->
     <link rel="icon" href="Logo_Nisel.png" type="image/png">
     
     <!-- Tailwind CSS untuk Styling -->
@@ -59,7 +58,7 @@
                     <img src="BUP&WABUP_NISEL.png" alt="Pemimpin Nisel" class="h-auto w-auto object-contain"/>
                     <h1 class="text-4xl font-extrabold text-slate-900 leading-tight">
                         Layanan Aspirasi & <br/>
-                        <span class="text-red-600">Pengaduan Online</span> Rakyat
+                        <span class="text-red-600">Pengaduan Online</span> Masyarakat
                     </h1>
                     <p class="mt-4 text-lg text-slate-600 leading-relaxed">
                         Sampaikan laporan dan saran Anda terkait fasilitas publik, pelayanan masyarakat 
@@ -390,10 +389,9 @@
         let currentUserData = null;
 
         function showView(viewId) {
-            // MENCEGAH akses ke halaman publik jika admin sedang login
+            // MENCEGAH akses ke halaman publik jika admin sedang login tanpa memunculkan pop-up alert
             if (viewId === 'public-view' && currentUserData !== null) {
-                alert('Tindakan ditolak! Silakan "Logout" terlebih dahulu jika ingin kembali ke Halaman Publik.');
-                return; // Hentikan fungsi, jangan pindah halaman
+                return; // Hentikan fungsi diam-diam di belakang layar
             }
 
             document.getElementById('public-view').classList.add('hidden');
